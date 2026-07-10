@@ -1,2 +1,2 @@
 #!/bin/bash
-python treefarmbot2.py
+python bot.py
