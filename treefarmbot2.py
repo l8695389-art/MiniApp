@@ -1,17 +1,19 @@
 # ==============================================
-# BOT TREE FARM - ĐÃ GẮN ẢNH MỚI
+# BOT TREE FARM - HOÀN CHỈNH
 # ==============================================
 
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 import requests
+import threading
+from flask import Flask
 
 TOKEN = "8616760362:AAHm1r-nBmbunneoOJm7WwzeHvQzfVJgBAI"
 bot = telebot.TeleBot(TOKEN)
 
-# 🔗 LINK ẢNH TRANG TRẠI MỚI
-LINK_ANH = "https://ibb.co/7x7DFnZ9"
+# 🔗 LINK ẢNH - THAY BẰNG LINK ẢNH TRỰC TIẾP KẾT THÚC .PNG/.JPG
+LINK_ANH = "https://i.ibb.co/7x7DFnZ9/1783599852392" 
 
 # 📂 LƯU ID ĐÃ GHI LOG - KHÔNG LẶP LẠI
 da_ghi_log = set()
@@ -71,20 +73,23 @@ Mời bạn bè, leo bảng xếp hạng và rút kim cương khi đủ điều 
 
 
 # ==============================================
+# GIỮ BOT LUÔN CHẠY (CHO RENDER/HOST MIỄN PHÍ)
+# ==============================================
+app = Flask(__name__)
+@app.route('/')
+def keep_alive(): return "✅ Bot Tree Farm đang hoạt động!"
+def run(): app.run(host='0.0.0.0', port=8080)
+threading.Thread(target=run, daemon=True).start()
+
+
+# ==============================================
 # KHỞI ĐỘNG BOT
 # ==============================================
 print("="*50)
 print("✅ BOT TREE FARM ĐÃ CHẠY!")
-print("🖼️  Đã dùng ảnh trang trại hoạt hình mới")
+print("🖼️  Ảnh trang trại đã gắn")
 print("🔗 Mini App: https://treefarmapp.netlify.app/")
 print("📋 Log chỉ ghi 1 lần cho mỗi người dùng")
 print("="*50 + "\n")
 
 bot.polling(none_stop=True)
-import threading
-from flask import Flask
-app = Flask(__name__)
-@app.route('/')
-def keep_alive(): return "Bot đang chạy!"
-def run(): app.run(host='0.0.0.0', port=8080)
-threading.Thread(target=run).start()
