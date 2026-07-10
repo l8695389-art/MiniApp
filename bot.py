@@ -9,7 +9,7 @@ import requests
 import threading
 from flask import Flask
 
-TOKEN = "88616760362:AAF95D8hygBDRM8ry-BBWGQhnhv9QFSKjUQ"
+TOKEN = "8616760362:AAF95D8hygBDRM8ry-BBWGQhnhv9QFSKjUQ"
 bot = telebot.TeleBot(TOKEN)
 
 # 🔗 LINK ẢNH - THAY BẰNG LINK ẢNH TRỰC TIẾP KẾT THÚC .PNG/.JPG
