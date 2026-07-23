@@ -332,14 +332,13 @@
     }
 
     // ────────────────────────────────────────────────────────────
-    // CẤU HÌNH LINK4M + BOT BACKEND
+    // CẤU HÌNH BACKEND (bot Railway)
     // ────────────────────────────────────────────────────────────
-    // LINK_GOC phải trỏ về đúng backend Flask của bot (route /kiem-tra-ip
-    // và /bao-hoan-thanh cần được thêm vào file Python — xem ghi chú cuối).
+    // Token Link4M KHÔNG còn nằm ở đây nữa — nó chỉ tồn tại phía backend
+    // (biến môi trường LINK4M_API_TOKEN trên Railway), tránh lộ token
+    // công khai trong code JS mà ai cũng xem được qua "View Source".
     const LINK4M_CONFIG = {
-      apiToken: '6a564c307ef9a42c86740383',
-      destinationUrl: 'https://t.me/treefarm_bot',
-      linkGoc: 'rwonbwdu9k1bvcsi8-production.up.railway.app' // = LINK_GOC bên bot Python
+      linkGoc: 'https://ten-domain-railway-cua-ban.up.railway.app' // đổi thành domain Railway thật
     };
 
     function copyText(text) {
@@ -356,27 +355,28 @@
       return Promise.resolve();
     }
 
-    async function createLink4mLink(longUrl) {
-      const endpoint = `https://link4m.co/api-shorten/v2?api=${encodeURIComponent(LINK4M_CONFIG.apiToken)}&url=${encodeURIComponent(longUrl)}`;
+    // Link4M chặn CORS khi gọi trực tiếp từ trình duyệt — nên tạo link và
+    // kiểm tra hoàn thành đều đi qua backend Railway (routes /tao-link,
+    // /kiem-tra-link), backend mới là nơi gọi thẳng Link4M.
+    async function createLink4mLink(uid) {
+      const endpoint = `${LINK4M_CONFIG.linkGoc}/tao-link?uid=${encodeURIComponent(uid)}`;
       const res = await fetch(endpoint);
       if (!res.ok) throw new Error('network');
       const data = await res.json();
-      if (data.status !== 'success' || !data.shortenedUrl) {
-        throw new Error(data.message || 'api-error');
+      if (!data.thanh_cong || !data.link) {
+        throw new Error(data.loi || 'api-error');
       }
-      return data.shortenedUrl;
+      return data.link;
     }
 
     // ── PHẦN 1: kiem_tra_link_hop_le (port từ bot Python) ──
-    // Bot Python dùng /api-stats + clicks > 0 để xác nhận nhiệm vụ hoàn thành.
-    // Ở đây gọi thẳng cùng endpoint từ client.
     async function kiemTraLinkHoanThanh(shortUrl) {
-      const endpoint = `https://link4m.co/api-stats?api=${encodeURIComponent(LINK4M_CONFIG.apiToken)}&url=${encodeURIComponent(shortUrl)}`;
+      const endpoint = `${LINK4M_CONFIG.linkGoc}/kiem-tra-link?url=${encodeURIComponent(shortUrl)}`;
       try {
         const res = await fetch(endpoint);
         if (!res.ok) return false;
         const data = await res.json();
-        return data.status === 'success' && parseInt(data.clicks || 0, 10) > 0;
+        return !!data.hoan_thanh;
       } catch (e) {
         console.error('Lỗi kiểm tra link:', e);
         return false;
@@ -468,13 +468,11 @@
           }
         }
 
-        // Bước 2: tạo link Link4M
+        // Bước 2: tạo link Link4M (qua backend, né CORS)
         label.textContent = 'Đang tạo liên kết...';
         try {
-          let target = LINK4M_CONFIG.destinationUrl;
-          if (uid) target += (target.includes('?') ? '&' : '?') + 'uid=' + uid;
-
-          const shortUrl = await createLink4mLink(target);
+          if (!uid) throw new Error('khong_co_uid');
+          const shortUrl = await createLink4mLink(uid);
           valueEl.textContent = shortUrl;
           openBtn.href = shortUrl;
           card.style.display = 'block';
